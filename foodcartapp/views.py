@@ -1,5 +1,7 @@
 import json
 from rest_framework.serializers import Serializer, ListField, IntegerField, CharField, ModelSerializer
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
@@ -8,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.serializers import ValidationError
 from .models import Order, OrderedProduct, Product
+from .serializers import OrderSerializer
 
 
 @api_view(["GET"])
@@ -65,7 +68,7 @@ def product_list_api(request):
 
 @api_view(["POST"])
 def register_order(request):    
-    serializer = OrderModelSerializer(data=request.data)
+    serializer = OrderDeserializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
     data = serializer.validated_data
@@ -87,31 +90,9 @@ def register_order(request):
         order.delete()
         return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-    return Response({"Message": "order created"})
-
-
-class OrderSerializer(Serializer):
-    products = ListField()
-    firstname = CharField()
-    lastname  = CharField()
-    phonenumber = CharField()
-    address = CharField()
-
-    def validate_phonenumber(self, value):
-        if not isinstance(value, str):
-            raise ValidationError("phonenumber is not string")
-        if "+" not in value and "8" not in value:
-            raise ValidationError("wrong phonenumber")
-        if "+7" in value and "9" not in value:
-            raise ValidationError("wrong phonenumber")
-        return value
+    ser = OrderDeserializer(order)
     
-    def validate_products(self, value):
-        for product in value:
-            prod_serializer = OrderedProductSerializer(product)
-            prod_serializer.is_valid(raise_exception=True)
-
-        return value
+    return Response(ser.data)
 
 
 class OrderedProductSerializer(ModelSerializer):
@@ -123,12 +104,14 @@ class OrderedProductSerializer(ModelSerializer):
         ]    
 
 
-class OrderModelSerializer(ModelSerializer):
-    products = OrderedProductSerializer(many=True, allow_empty=False)
+class OrderDeserializer(ModelSerializer):
+    id = IntegerField(read_only=True)
+    products = OrderedProductSerializer(many=True, allow_empty=False, write_only=True)
 
     class Meta:
         model = Order
         fields = [
+            "id",
             "products",
             "firstname",
             "lastname",
