@@ -68,7 +68,7 @@ def product_list_api(request):
 
 @api_view(["POST"])
 def register_order(request):    
-    serializer = OrderDeserializer(data=request.data)
+    serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
     data = serializer.validated_data
@@ -90,7 +90,7 @@ def register_order(request):
         order.delete()
         return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-    ser = OrderDeserializer(order)
+    ser = OrderSerializer(order)
     
     return Response(ser.data)
 
@@ -104,7 +104,7 @@ class OrderedProductSerializer(ModelSerializer):
         ]    
 
 
-class OrderDeserializer(ModelSerializer):
+class OrderSerializer(ModelSerializer):
     id = IntegerField(read_only=True)
     products = OrderedProductSerializer(many=True, allow_empty=False, write_only=True)
 
