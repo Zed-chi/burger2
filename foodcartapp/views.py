@@ -1,12 +1,12 @@
 import json
-
+from rest_framework.serializers import Serializer, ListField, IntegerField, CharField, ModelSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.serializers import ValidationError
 from .models import Order, OrderedProduct, Product
 
 
@@ -64,16 +64,11 @@ def product_list_api(request):
 
 
 @api_view(["POST"])
-def register_order(request):
-    data = request.data
-    try:
-        validate_order_data(data)
-    except ValueError as e:
-        print(e)
-        return Response(
-            {"message": str(e)}, status=status.HTTP_406_NOT_ACCEPTABLE
-        )
+def register_order(request):    
+    serializer = OrderModelSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
+    data = serializer.validated_data
     print(data)
 
     order = Order.objects.create(
@@ -83,14 +78,9 @@ def register_order(request):
         address=data["address"],
     )
     try:
-        for product_data in data["products"]:
-            product = get_object_or_404(Product, pk=product_data["product"])
-            product = Product.objects.get(pk=product_data["product"])
-            if not product:
-                print("not")
-            print(f'{product_data["product"]} {product}')
+        for product_data in data["products"]:                        
             ordered_product = OrderedProduct.objects.create(
-                order=order, product=product, quantity=product_data["quantity"]
+                order=order, product=product_data["product"], quantity=product_data["quantity"]
             )
     except Exception as e:
         print(e)
@@ -100,49 +90,48 @@ def register_order(request):
     return Response({"Message": "order created"})
 
 
-def validate_order_data(data):
-    if not isinstance(data, dict):
-        raise ValueError(f"Request data is not json-like")
+class OrderSerializer(Serializer):
+    products = ListField()
+    firstname = CharField()
+    lastname  = CharField()
+    phonenumber = CharField()
+    address = CharField()
 
-    for key in ["products", "firstname", "lastname", "phonenumber", "address"]:
-        if key not in data.keys():
-            raise ValueError(f"There is no {key} key")
-        if not data[key]:
-            raise ValueError(f"{key} value is falsy")
-
-    if not isinstance(data["products"], list):
-        raise ValueError("Products is not list")
-
-    for product in data["products"]:
-        validate_order_product(product)
-
-    if not isinstance(data["firstname"], str):
-        raise ValueError("firstname is not string")
-    if not isinstance(data["lastname"], str):
-        raise ValueError("lastname is not string")
+    def validate_phonenumber(self, value):
+        if not isinstance(value, str):
+            raise ValidationError("phonenumber is not string")
+        if "+" not in value and "8" not in value:
+            raise ValidationError("wrong phonenumber")
+        if "+7" in value and "9" not in value:
+            raise ValidationError("wrong phonenumber")
+        return value
     
-    validate_phonenumber(data["phonenumber"])
-    if not isinstance(data["address"], str):
-        raise ValueError("address is not string")
+    def validate_products(self, value):
+        for product in value:
+            prod_serializer = OrderedProductSerializer(product)
+            prod_serializer.is_valid(raise_exception=True)
 
-    return data
-
-
-def validate_order_product(data):
-    for key in data.keys():
-        if key not in ["product", "quantity"]:
-            raise ValueError(f"wrong {key} key")
-
-    if not isinstance(data["product"], int):
-        raise ValueError("product is not integer")
-    if not isinstance(data["quantity"], int):
-        raise ValueError("quantity is not integer")
+        return value
 
 
-def validate_phonenumber(number):
-    if not isinstance(number, str):
-        raise ValueError("phonenumber is not string")
-    if "+" not in number and "8" not in number:
-        raise ValueError("wrong phonenumber")
-    if "+7" in number and "9" not in number:
-        raise ValueError("wrong phonenumber")
+class OrderedProductSerializer(ModelSerializer):
+    class Meta:
+        model = OrderedProduct
+        fields = [
+            "product",
+            "quantity",
+        ]    
+
+
+class OrderModelSerializer(ModelSerializer):
+    products = OrderedProductSerializer(many=True, allow_empty=False)
+
+    class Meta:
+        model = Order
+        fields = [
+            "products",
+            "firstname",
+            "lastname",
+            "phonenumber",
+            "address",
+        ]
