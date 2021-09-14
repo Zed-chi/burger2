@@ -108,10 +108,15 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
+    status_choices = [
+        (True, "Обработано"),
+        (False, "Необработано"),        
+    ]
     firstname = models.CharField(max_length=30)
     lastname = models.CharField(max_length=50)
     phonenumber = PhoneNumberField(max_length=32)
     address = models.CharField(max_length=100)
+    is_processed = models.BooleanField(choices=status_choices, default=False)
 
     class Meta:
         verbose_name = "заказ"
