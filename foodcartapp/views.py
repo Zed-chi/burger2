@@ -84,12 +84,18 @@ def register_order(request):
     )
     try:
         for product_data in data["products"]:
-            product = get_object_or_404(Product, id=product_data["product"])
+            product = get_object_or_404(Product, pk=product_data["product"])
+            product = Product.objects.get(pk=product_data["product"])
+            if not product:
+                print("not")
+            print(f'{product_data["product"]} {product}')
             ordered_product = OrderedProduct.objects.create(
                 order=order, product=product, quantity=product_data["quantity"]
             )
-    except:
+    except Exception as e:
+        print(e)
         order.delete()
+        return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
     return Response({"Message": "order created"})
 
@@ -114,8 +120,8 @@ def validate_order_data(data):
         raise ValueError("firstname is not string")
     if not isinstance(data["lastname"], str):
         raise ValueError("lastname is not string")
-    if not isinstance(data["phonenumber"], str):
-        raise ValueError("phonenumber is not string")
+    
+    validate_phonenumber(data["phonenumber"])
     if not isinstance(data["address"], str):
         raise ValueError("address is not string")
 
@@ -131,3 +137,12 @@ def validate_order_product(data):
         raise ValueError("product is not integer")
     if not isinstance(data["quantity"], int):
         raise ValueError("quantity is not integer")
+
+
+def validate_phonenumber(number):
+    if not isinstance(number, str):
+        raise ValueError("phonenumber is not string")
+    if "+" not in number and "8" not in number:
+        raise ValueError("wrong phonenumber")
+    if "+7" in number and "9" not in number:
+        raise ValueError("wrong phonenumber")
