@@ -3,13 +3,15 @@ import json
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import Order, OrderedProduct, Product
 
-
+@api_view(['GET'])
 def banners_list_api(request):
     # FIXME move data to db?
-    return JsonResponse(
+    return Response(
         [
             {
                 "title": "Burger",
@@ -26,15 +28,10 @@ def banners_list_api(request):
                 "src": static("tasty.jpg"),
                 "text": "Food is incomplete without a tasty dessert",
             },
-        ],
-        safe=False,
-        json_dumps_params={
-            "ensure_ascii": False,
-            "indent": 4,
-        },
+        ],        
     )
 
-
+@api_view(['GET'])
 def product_list_api(request):
     products = Product.objects.select_related("category").available()
 
@@ -57,21 +54,15 @@ def product_list_api(request):
             },
         }
         dumped_products.append(dumped_product)
-    return JsonResponse(
+    
+    return Response(
         dumped_products,
-        safe=False,
-        json_dumps_params={
-            "ensure_ascii": False,
-            "indent": 4,
-        },
     )
 
 
+@api_view(['POST'])
 def register_order(request):
-    if request.method != "POST":
-        return JsonResponse({})
-
-    data = json.loads(request.body.decode())
+    data = request.data
     print(data)
 
     order = Order.objects.create(
@@ -89,4 +80,4 @@ def register_order(request):
     except:
         order.delete()
 
-    return JsonResponse({"Message": "order created"})
+    return Response({"Message": "order created"})
