@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.serializers import ValidationError
 from .models import Order, OrderedProduct, Product
-from .serializers import OrderSerializer
 
 
 @api_view(["GET"])
@@ -83,7 +82,10 @@ def register_order(request):
     try:
         for product_data in data["products"]:                        
             ordered_product = OrderedProduct.objects.create(
-                order=order, product=product_data["product"], quantity=product_data["quantity"]
+                order=order, product=product_data["product"],
+                quantity=product_data["quantity"],
+                product_price = product_data["product"].price,
+                total_price = product_data["product"].price * product_data["quantity"],
             )
     except Exception as e:
         print(e)

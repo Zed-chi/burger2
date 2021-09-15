@@ -143,6 +143,20 @@ class OrderedProduct(models.Model):
         Product, on_delete=models.DO_NOTHING, related_name="order_position"
     )
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    product_price = models.DecimalField(
+        "цена",
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        default=0
+    )
+    total_price = models.DecimalField(
+        "цена",
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        default=0
+    )
 
     class Meta:
         verbose_name = "позиция"
