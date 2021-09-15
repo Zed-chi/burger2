@@ -119,11 +119,16 @@ class Order(models.Model):
         (True, "Обработано"),
         (False, "Необработано"),        
     ]
+    payment_choices = [
+        (True, "Наличными"),
+        (False, "Электронно"),        
+    ]
     firstname = models.CharField(max_length=30)
     lastname = models.CharField(max_length=50)
     phonenumber = PhoneNumberField(max_length=32)
     address = models.CharField(max_length=100)
     is_processed = models.BooleanField(choices=status_choices, default=False)
+    payment = models.BooleanField(choices=payment_choices, default=True)
     comment = models.TextField(default="", blank=True)
 
     created_at = models.DateTimeField(default=timezone.now)
