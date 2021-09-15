@@ -123,6 +123,7 @@ class Order(models.Model):
     phonenumber = PhoneNumberField(max_length=32)
     address = models.CharField(max_length=100)
     is_processed = models.BooleanField(choices=status_choices, default=False)
+    comment = models.TextField(default="", blank=True)
 
     class Meta:
         verbose_name = "заказ"
