@@ -114,10 +114,12 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url="restaurateur:login")
 def view_orders(request):
     orders = Order.objects.filter(is_processed=False)
+    print(request.headers["Referer"])
     return render(
         request,
         template_name="order_items.html",
         context={
-            "order_items":orders
+            "order_items":orders,
+            "backURL":request.path
         },
     )
