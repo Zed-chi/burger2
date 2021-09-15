@@ -40,8 +40,8 @@
           <details>
             <summary>Развернуть</summary>
             <ul>              
-              {% for res in order.get_restaurants %}
-                <li>{{res}}</li>
+              {% for name, dist in order.get_restaurants %}
+                <li>{{name}} - {{dist}}км</li>
               {% endfor %}
             </ul>
           </details>

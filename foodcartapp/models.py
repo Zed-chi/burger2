@@ -2,6 +2,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models import F, Sum
+import requests
+from geopy import distance
 from django.utils import timezone
 
 
@@ -149,18 +151,51 @@ class Order(models.Model):
             return 0
         return result["price__sum"]
     
-    def get_restaurants(self):        
+    def get_restaurants(self):
+        order_coords = self.get_coords(self.address)
+
         prods = [x.product for x in self.orderedproduct_set.all()]
 
         items_lists = [RestaurantMenuItem.objects.filter(product=x) for x in prods]
-        rest_lists = []
+        names = []
 
         for item_list in items_lists:                
-            rest_lists.append([x.restaurant.name for x in item_list])
+            names.append([x.restaurant.name for x in item_list])
+
+        print(names)
+        intersection = set(names[0]).intersection(*names[1:])
+        rests = Restaurant.objects.filter(name__in=intersection)
+
+        results = []
+        for i in rests:
+            coords = self.get_coords(i.address)
+            dist = self.get_distance(order_coords, coords)
+            results.append([i.name, round(dist, 2)])
         
-        result = (set(rest_lists[0]).intersection(*rest_lists[1:]))
-        print(result)
-        return result
+        return sorted(results, key=lambda x:x[1])
+
+    def get_coords(self, address):
+        try:
+            params = {
+                "q": address,
+                "polygon_geojson":1,
+                "format":"jsonv2"
+            }
+            
+            res = requests.get(f"https://nominatim.geocoding.ai/search.php", params=params)
+            if res.ok:
+                json_data = res.json()
+                return float(json_data[0]["lat"]), float(json_data[0]["lon"])
+        except:
+            return None
+
+    def get_distance(self, coord1, coord2):
+        try:
+            return distance.distance(coord1, coord2).km
+        except:
+            return None
+
+
     
 class OrderedProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

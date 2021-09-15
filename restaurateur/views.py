@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-
+import requests
+import geopy
 from foodcartapp.models import Order, Product, Restaurant
 
 
