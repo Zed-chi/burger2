@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.serializers import ValidationError
 from .models import Order, OrderedProduct, Product
+from django.db import transaction
 
 
 @api_view(["GET"])
@@ -73,28 +74,25 @@ def register_order(request):
     data = serializer.validated_data
     print(data)
 
-    order = Order.objects.create(
-        firstname=data["firstname"],
-        lastname=data["lastname"],
-        phonenumber=data["phonenumber"],
-        address=data["address"],
-    )
-    try:
+    with transaction.atomic():
+        order = Order.objects.create(
+            firstname=data["firstname"],
+            lastname=data["lastname"],
+            phonenumber=data["phonenumber"],
+            address=data["address"],
+        )
+        
         for product_data in data["products"]:                        
             ordered_product = OrderedProduct.objects.create(
                 order=order, product=product_data["product"],
                 quantity=product_data["quantity"],
                 product_price = product_data["product"].price,
                 total_price = product_data["product"].price * product_data["quantity"],
-            )
-    except Exception as e:
-        print(e)
-        order.delete()
-        return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+            )        
 
-    ser = OrderSerializer(order)
-    
-    return Response(ser.data)
+        ser = OrderSerializer(order)
+        
+        return Response(ser.data)
 
 
 class OrderedProductSerializer(ModelSerializer):
