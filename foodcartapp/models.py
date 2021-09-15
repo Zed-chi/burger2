@@ -130,6 +130,7 @@ class Order(models.Model):
     is_processed = models.BooleanField(choices=status_choices, default=False)
     payment = models.BooleanField(choices=payment_choices, default=True)
     comment = models.TextField(default="", blank=True)
+    restaurant = models.ForeignKey(Restaurant, null=True, blank=True, on_delete=models.SET_NULL)
 
     created_at = models.DateTimeField(default=timezone.now)
     called_at = models.DateTimeField(null=True, blank=True)
@@ -147,6 +148,19 @@ class Order(models.Model):
         if result["price__sum"] is None:
             return 0
         return result["price__sum"]
+    
+    def get_restaurants(self):        
+        prods = [x.product for x in self.orderedproduct_set.all()]
+
+        items_lists = [RestaurantMenuItem.objects.filter(product=x) for x in prods]
+        rest_lists = []
+
+        for item_list in items_lists:                
+            rest_lists.append([x.restaurant.name for x in item_list])
+        
+        result = (set(rest_lists[0]).intersection(*rest_lists[1:]))
+        print(result)
+        return result
     
 class OrderedProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

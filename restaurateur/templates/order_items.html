@@ -21,6 +21,7 @@
       <th>Адрес доставки</th>
       <th>Комментарий</th>
       <th>Вариант оплаты</th>
+      <th>Доступно</th>
       <th>Редактировать</th>
     </tr>
 
@@ -34,6 +35,18 @@
         <td>{{ order.address }}</td>
         <td>{{ order.comment }}</td>
         <td>{{ order.get_payment_display }}</td>
+        
+        <td>
+          <details>
+            <summary>Развернуть</summary>
+            <ul>              
+              {% for res in order.get_restaurants %}
+                <li>{{res}}</li>
+              {% endfor %}
+            </ul>
+          </details>
+        </td>          
+
         <td>
           <a href='{% url "admin:foodcartapp_order_change" object_id=order.id %}?next={{ backURL|urlencode }}'>Редактировать</a>
         </td>
