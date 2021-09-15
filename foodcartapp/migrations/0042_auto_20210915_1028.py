@@ -7,18 +7,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0041_alter_order_managers'),
+        ("foodcartapp", "0041_alter_order_managers"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='orderedproduct',
-            name='product_price',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=8, validators=[django.core.validators.MinValueValidator(0)], verbose_name='цена'),
+            model_name="orderedproduct",
+            name="product_price",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=0,
+                max_digits=8,
+                validators=[django.core.validators.MinValueValidator(0)],
+                verbose_name="цена",
+            ),
         ),
         migrations.AddField(
-            model_name='orderedproduct',
-            name='total_price',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=8, validators=[django.core.validators.MinValueValidator(0)], verbose_name='цена'),
+            model_name="orderedproduct",
+            name="total_price",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=0,
+                max_digits=8,
+                validators=[django.core.validators.MinValueValidator(0)],
+                verbose_name="цена",
+            ),
         ),
     ]

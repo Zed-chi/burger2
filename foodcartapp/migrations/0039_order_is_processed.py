@@ -6,13 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0038_order_orderedproduct'),
+        ("foodcartapp", "0038_order_orderedproduct"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
-            name='is_processed',
-            field=models.BooleanField(choices=[(True, 'Обработано'), (False, 'Необработано')], default=False),
+            model_name="order",
+            name="is_processed",
+            field=models.BooleanField(
+                choices=[(True, "Обработано"), (False, "Необработано")],
+                default=False,
+            ),
         ),
     ]

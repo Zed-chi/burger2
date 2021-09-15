@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0043_auto_20210915_1438'),
+        ("foodcartapp", "0043_auto_20210915_1438"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='order',
-            name='comment',
-            field=models.TextField(blank=True, default=''),
+            model_name="order",
+            name="comment",
+            field=models.TextField(blank=True, default=""),
         ),
     ]

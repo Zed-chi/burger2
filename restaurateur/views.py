@@ -1,3 +1,5 @@
+import geopy
+import requests
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
@@ -5,8 +7,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-import requests
-import geopy
+
 from foodcartapp.models import Order, Product, Restaurant
 
 
@@ -119,8 +120,5 @@ def view_orders(request):
     return render(
         request,
         template_name="order_items.html",
-        context={
-            "order_items":orders,
-            "backURL":request.path
-        },
+        context={"order_items": orders, "backURL": request.path},
     )

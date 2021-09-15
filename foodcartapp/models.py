@@ -1,10 +1,11 @@
+import requests
 from django.core.validators import MinValueValidator
 from django.db import models
-from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models import F, Sum
-import requests
-from geopy import distance
 from django.utils import timezone
+from geopy import distance
+from phonenumber_field.modelfields import PhoneNumberField
+
 from geocache.models import PlaceCache
 
 
@@ -111,20 +112,24 @@ class RestaurantMenuItem(models.Model):
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
 
+
 class OrderQuerySet(models.QuerySet):
     def get_price(self):
-        return self.orderedproduct_set.annotate(price=F("product__id")*F("quantity")).aggegate(Sum("price"))
+        return self.orderedproduct_set.annotate(
+            price=F("product__id") * F("quantity")
+        ).aggegate(Sum("price"))
+
 
 class Order(models.Model):
     objects = OrderQuerySet.as_manager()
 
     status_choices = [
         (True, "Обработано"),
-        (False, "Необработано"),        
+        (False, "Необработано"),
     ]
     payment_choices = [
         (True, "Наличными"),
-        (False, "Электронно"),        
+        (False, "Электронно"),
     ]
     firstname = models.CharField(max_length=30)
     lastname = models.CharField(max_length=50)
@@ -133,7 +138,9 @@ class Order(models.Model):
     is_processed = models.BooleanField(choices=status_choices, default=False)
     payment = models.BooleanField(choices=payment_choices, default=True)
     comment = models.TextField(default="", blank=True)
-    restaurant = models.ForeignKey(Restaurant, null=True, blank=True, on_delete=models.SET_NULL)
+    restaurant = models.ForeignKey(
+        Restaurant, null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     created_at = models.DateTimeField(default=timezone.now)
     called_at = models.DateTimeField(null=True, blank=True)
@@ -145,52 +152,53 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order - {self.phonenumber}"
-    
+
     def get_price(self):
-        result = self.orderedproduct_set.annotate(price=F("product__price")*F("quantity")).aggregate(Sum("price"))
+        result = self.orderedproduct_set.annotate(
+            price=F("product__price") * F("quantity")
+        ).aggregate(Sum("price"))
         if result["price__sum"] is None:
             return 0
         return result["price__sum"]
-    
+
     def get_restaurants(self):
-        order_coords = self.get_coords(self.address)        
+        order_coords = self.get_coords(self.address)
 
         prods = [x.product for x in self.orderedproduct_set.all()]
 
-        items_lists = [RestaurantMenuItem.objects.filter(product=x) for x in prods]
+        items_lists = [
+            RestaurantMenuItem.objects.filter(product=x) for x in prods
+        ]
         names = []
 
-        for item_list in items_lists:                
+        for item_list in items_lists:
             names.append([x.restaurant.name for x in item_list])
-        
+
         intersection = set(names[0]).intersection(*names[1:])
-        rests = Restaurant.objects.filter(name__in=intersection)        
+        rests = Restaurant.objects.filter(name__in=intersection)
 
         results = []
-        for i in rests:            
-            place = PlaceCache.objects.filter(address=self.address)            
+        for i in rests:
+            place = PlaceCache.objects.filter(address=self.address)
             if len(place) != 0:
                 distance = place[0].distance
-            else:                
+            else:
                 coords = self.get_coords(i.address)
                 distance = self.get_distance(order_coords, coords)
                 PlaceCache.objects.create(
-                    address = self.address, 
-                    distance=distance
-                )            
-            results.append({"name":i.name, "dist":round(distance, 2)})
-        
-        return sorted(results, key=lambda x:x["dist"])
+                    address=self.address, distance=distance
+                )
+            results.append({"name": i.name, "dist": round(distance, 2)})
+
+        return sorted(results, key=lambda x: x["dist"])
 
     def get_coords(self, address):
         try:
-            params = {
-                "q": address,
-                "polygon_geojson":1,
-                "format":"jsonv2"
-            }
-            
-            res = requests.get(f"https://nominatim.geocoding.ai/search.php", params=params)
+            params = {"q": address, "polygon_geojson": 1, "format": "jsonv2"}
+
+            res = requests.get(
+                f"https://nominatim.geocoding.ai/search.php", params=params
+            )
             if res.ok:
                 json_data = res.json()
                 return float(json_data[0]["lat"]), float(json_data[0]["lon"])
@@ -204,7 +212,6 @@ class Order(models.Model):
             return None
 
 
-    
 class OrderedProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey(
@@ -216,14 +223,14 @@ class OrderedProduct(models.Model):
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-        default=0
+        default=0,
     )
     total_price = models.DecimalField(
         "общая цена",
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-        default=0
+        default=0,
     )
 
     class Meta:

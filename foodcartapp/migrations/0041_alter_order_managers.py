@@ -6,13 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0040_alter_order_managers'),
+        ("foodcartapp", "0040_alter_order_managers"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='order',
-            managers=[
-            ],
+            name="order",
+            managers=[],
         ),
     ]

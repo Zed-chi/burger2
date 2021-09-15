@@ -1,16 +1,19 @@
 import json
-from rest_framework.serializers import Serializer, ListField, IntegerField, CharField, ModelSerializer
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
+
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.serializers import ValidationError
+from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
+from rest_framework.serializers import (CharField, IntegerField, ListField,
+                                        ModelSerializer, Serializer,
+                                        ValidationError)
+
 from .models import Order, OrderedProduct, Product
-from django.db import transaction
 
 
 @api_view(["GET"])
@@ -67,7 +70,7 @@ def product_list_api(request):
 
 
 @api_view(["POST"])
-def register_order(request):    
+def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -81,17 +84,19 @@ def register_order(request):
             phonenumber=data["phonenumber"],
             address=data["address"],
         )
-        
-        for product_data in data["products"]:                        
+
+        for product_data in data["products"]:
             ordered_product = OrderedProduct.objects.create(
-                order=order, product=product_data["product"],
+                order=order,
+                product=product_data["product"],
                 quantity=product_data["quantity"],
-                product_price = product_data["product"].price,
-                total_price = product_data["product"].price * product_data["quantity"],
-            )        
+                product_price=product_data["product"].price,
+                total_price=product_data["product"].price
+                * product_data["quantity"],
+            )
 
         ser = OrderSerializer(order)
-        
+
         return Response(ser.data)
 
 
@@ -101,12 +106,14 @@ class OrderedProductSerializer(ModelSerializer):
         fields = [
             "product",
             "quantity",
-        ]    
+        ]
 
 
 class OrderSerializer(ModelSerializer):
     id = IntegerField(read_only=True)
-    products = OrderedProductSerializer(many=True, allow_empty=False, write_only=True)
+    products = OrderedProductSerializer(
+        many=True, allow_empty=False, write_only=True
+    )
 
     class Meta:
         model = Order
