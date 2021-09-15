@@ -115,8 +115,10 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url="restaurateur:login")
 def view_orders(request):
-    orders = Order.objects.filter(is_processed=False)
-    print(request.headers["Referer"])
+    orders = Order.objects.filter(is_processed="Unhandled")    
+    
+    print(orders)
+    print(Order.objects.all()[0].is_processed)
     return render(
         request,
         template_name="order_items.html",

@@ -123,28 +123,30 @@ class OrderQuerySet(models.QuerySet):
 class Order(models.Model):
     objects = OrderQuerySet.as_manager()
 
-    status_choices = [
-        (True, "Обработано"),
-        (False, "Необработано"),
+    STATUS_CHOICES = [
+        ("Handled", "Обработано"),
+        ("Unhandled", "Необработано")
     ]
-    payment_choices = [
-        (True, "Наличными"),
-        (False, "Электронно"),
+    PAYMENT_CHOICES = [
+        ("CASH", "Наличными"),
+        ("CARD", "Электронно")
     ]
-    firstname = models.CharField(max_length=30)
-    lastname = models.CharField(max_length=50)
-    phonenumber = PhoneNumberField(max_length=32)
-    address = models.CharField(max_length=100)
-    is_processed = models.BooleanField(choices=status_choices, default=False)
-    payment = models.BooleanField(choices=payment_choices, default=True)
-    comment = models.TextField(default="", blank=True)
+
+    firstname = models.CharField("Имя", max_length=30)
+    lastname = models.CharField("Фамилия",max_length=50)
+    phonenumber = PhoneNumberField("Номер телефона", max_length=32)
+    address = models.CharField("Адрес доставки", max_length=100)
+    is_processed = models.CharField("Статус заказа", choices=STATUS_CHOICES, default="Unhandled", max_length=30)
+    payment = models.CharField("Вид оплаты", choices=PAYMENT_CHOICES , default="CASH", max_length=30)
+    comment = models.TextField("Комментарий к заказу", default="", blank=True)
     restaurant = models.ForeignKey(
-        Restaurant, null=True, blank=True, on_delete=models.SET_NULL
+        Restaurant, null=True, blank=True, on_delete=models.SET_NULL,
+        verbose_name="Ресторан отгрузки"
     )
 
-    created_at = models.DateTimeField(default=timezone.now)
-    called_at = models.DateTimeField(null=True, blank=True)
-    delivered_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField("Дата создания", default=timezone.now)
+    called_at = models.DateTimeField("Дата звонка", null=True, blank=True)
+    delivered_at = models.DateTimeField("Дата доставки", null=True, blank=True)
 
     class Meta:
         verbose_name = "заказ"
@@ -213,20 +215,21 @@ class Order(models.Model):
 
 
 class OrderedProduct(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Заказ")
     product = models.ForeignKey(
-        Product, on_delete=models.DO_NOTHING, related_name="order_position"
+        Product, on_delete=models.DO_NOTHING, related_name="order_position",
+        verbose_name="Товар"
     )
-    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    quantity = models.IntegerField(validators=[MinValueValidator(1)], verbose_name="Количество")
     product_price = models.DecimalField(
-        "цена товара",
+        "Цена товара",
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
         default=0,
     )
     total_price = models.DecimalField(
-        "общая цена",
+        "Общая цена",
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
