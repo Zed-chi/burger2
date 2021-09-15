@@ -5,6 +5,7 @@ from django.db.models import F, Sum
 import requests
 from geopy import distance
 from django.utils import timezone
+from geocache.models import PlaceCache
 
 
 class Restaurant(models.Model):
@@ -152,7 +153,7 @@ class Order(models.Model):
         return result["price__sum"]
     
     def get_restaurants(self):
-        order_coords = self.get_coords(self.address)
+        order_coords = self.get_coords(self.address)        
 
         prods = [x.product for x in self.orderedproduct_set.all()]
 
@@ -161,18 +162,25 @@ class Order(models.Model):
 
         for item_list in items_lists:                
             names.append([x.restaurant.name for x in item_list])
-
-        print(names)
+        
         intersection = set(names[0]).intersection(*names[1:])
-        rests = Restaurant.objects.filter(name__in=intersection)
+        rests = Restaurant.objects.filter(name__in=intersection)        
 
         results = []
-        for i in rests:
-            coords = self.get_coords(i.address)
-            dist = self.get_distance(order_coords, coords)
-            results.append([i.name, round(dist, 2)])
+        for i in rests:            
+            place = PlaceCache.objects.filter(address=self.address)            
+            if len(place) != 0:
+                distance = place[0].distance
+            else:                
+                coords = self.get_coords(i.address)
+                distance = self.get_distance(order_coords, coords)
+                PlaceCache.objects.create(
+                    address = self.address, 
+                    distance=distance
+                )            
+            results.append({"name":i.name, "dist":round(distance, 2)})
         
-        return sorted(results, key=lambda x:x[1])
+        return sorted(results, key=lambda x:x["dist"])
 
     def get_coords(self, address):
         try:
