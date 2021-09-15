@@ -144,14 +144,14 @@ class OrderedProduct(models.Model):
     )
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     product_price = models.DecimalField(
-        "цена",
+        "цена товара",
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
         default=0
     )
     total_price = models.DecimalField(
-        "цена",
+        "общая цена",
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
