@@ -4,7 +4,7 @@ from django.utils import timezone
 
 # Create your models here.
 class Place(models.Model):
-    address = models.CharField("Адрес", max_length=100)
+    address = models.CharField("Адрес", max_length=100, db_index=True)
     lat = models.FloatField("Широта")
     lon = models.FloatField("Долгота")
     last_update = models.DateTimeField(
