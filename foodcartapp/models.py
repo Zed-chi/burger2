@@ -163,11 +163,13 @@ class Order(models.Model):
         return result["price__sum"]
 
     def available_in(self):        
-        products = [ordered_position.product for ordered_position in self.orderedproduct_set.all()]
+        products = [ordered_position.product for ordered_position in self.orderedproduct_set.select_related('product').all()]
         restaurants_list = []
         
         for product in products:
-            restaurants_list.append({item.restaurant for item in product.menu_items.all()})
+            restaurants_list.append(
+                {item.restaurant for item in product.menu_items.select_related('restaurant').all()}
+            )
         
         intersection = restaurants_list[0].intersection(*restaurants_list[1:])        
         
