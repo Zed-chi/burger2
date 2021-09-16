@@ -2,10 +2,10 @@ from django.contrib import admin
 from django.shortcuts import HttpResponseRedirect, reverse
 from django.templatetags.static import static
 from django.utils.html import format_html
-from django.utils.http import is_safe_url, url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme
 
-from .models import (Order, OrderedProduct, Product, ProductCategory,
-                     Restaurant, RestaurantMenuItem)
+from .models import (Order, OrderItem, Product, ProductCategory, Restaurant,
+                     RestaurantMenuItem)
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -109,14 +109,14 @@ class ProductAdmin(admin.ModelAdmin):
     pass
 
 
-class OrderedProductInline(admin.TabularInline):
-    model = OrderedProduct
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     inlines = [
-        OrderedProductInline,
+        OrderItemInline,
     ]
     list_display = ("firstname", "lastname", "phonenumber", "address")
 
@@ -131,6 +131,6 @@ class OrderAdmin(admin.ModelAdmin):
             return res
 
 
-@admin.register(OrderedProduct)
-class OrderedProductAdmin(admin.ModelAdmin):
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
     pass

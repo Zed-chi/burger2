@@ -13,7 +13,7 @@ from rest_framework.serializers import (CharField, IntegerField, ListField,
                                         ModelSerializer, Serializer,
                                         ValidationError)
 
-from .models import Order, OrderedProduct, Product
+from .models import Order, OrderItem, Product
 
 
 @api_view(["GET"])
@@ -75,7 +75,6 @@ def register_order(request):
     serializer.is_valid(raise_exception=True)
 
     data = serializer.validated_data
-    print(data)
 
     with transaction.atomic():
         order = Order.objects.create(
@@ -86,7 +85,7 @@ def register_order(request):
         )
 
         for product_data in data["products"]:
-            ordered_product = OrderedProduct.objects.create(
+            OrderItem.objects.create(
                 order=order,
                 product=product_data["product"],
                 quantity=product_data["quantity"],
@@ -100,9 +99,9 @@ def register_order(request):
         return Response(ser.data)
 
 
-class OrderedProductSerializer(ModelSerializer):
+class OrderItemSerializer(ModelSerializer):
     class Meta:
-        model = OrderedProduct
+        model = OrderItem
         fields = [
             "product",
             "quantity",
@@ -111,7 +110,7 @@ class OrderedProductSerializer(ModelSerializer):
 
 class OrderSerializer(ModelSerializer):
     id = IntegerField(read_only=True)
-    products = OrderedProductSerializer(
+    products = OrderItemSerializer(
         many=True, allow_empty=False, write_only=True
     )
 

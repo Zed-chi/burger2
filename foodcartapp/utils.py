@@ -26,9 +26,7 @@ def get_distance(order_place, restaurant_place):
 
 def get_place(address):
     coords = get_coords(address)
-    print("coords ", coords)
     if not coords:
         coords = [0, 0]
     place = Place.objects.create(address=address, lat=coords[0], lon=coords[1])
-    print("place ", place)
     return place

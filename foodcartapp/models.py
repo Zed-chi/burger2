@@ -1,4 +1,3 @@
-import requests
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F, Sum
@@ -116,7 +115,7 @@ class RestaurantMenuItem(models.Model):
 
 class OrderQuerySet(models.QuerySet):
     def get_price(self):
-        return self.orderedproduct_set.annotate(
+        return self.items.annotate(
             price=F("product__id") * F("quantity")
         ).aggegate(Sum("price"))
 
@@ -138,9 +137,9 @@ class Order(models.Model):
         max_length=30,
     )
     payment = models.CharField(
-        "Вид оплаты", choices=PAYMENT_CHOICES, default="CASH", max_length=30
+        "Вид оплаты", choices=PAYMENT_CHOICES, default="CARD", max_length=30
     )
-    comment = models.TextField("Комментарий к заказу", default="", blank=True)
+    comment = models.TextField("Комментарий к заказу", null=True, blank=True)
     restaurant = models.ForeignKey(
         Restaurant,
         null=True,
@@ -161,7 +160,7 @@ class Order(models.Model):
         return f"Order - {self.phonenumber}"
 
     def get_price(self):
-        result = self.orderedproduct_set.annotate(
+        result = self.items.annotate(
             price=F("product__price") * F("quantity")
         ).aggregate(Sum("price"))
         if result["price__sum"] is None:
@@ -170,10 +169,8 @@ class Order(models.Model):
 
     def available_in(self):
         products = [
-            ordered_position.product
-            for ordered_position in self.orderedproduct_set.select_related(
-                "product"
-            ).all()
+            order_item.product
+            for order_item in self.items.select_related("product").all()
         ]
         restaurants_list = []
 
@@ -191,45 +188,40 @@ class Order(models.Model):
 
         results = []
         for restaurant in intersection:
-            print("start")
             order_place_qs = Place.objects.filter(address=self.address)
             restaurant_place_qs = Place.objects.filter(
                 address=restaurant.address
             )
 
-            print(order_place_qs)
             if len(order_place_qs):
-                print("order true")
                 order_place = order_place_qs[0]
             else:
-                print("order false")
                 order_place = get_place(self.address)
 
-            print(restaurant_place_qs)
             if len(restaurant_place_qs):
-                print("rest true")
                 restaurant_place = restaurant_place_qs[0]
             else:
-                print("rest false")
                 restaurant_place = get_place(restaurant.address)
 
             distance = get_distance(order_place, restaurant_place)
-            print(distance)
 
             results.append({"name": restaurant.name, "dist": distance})
 
         return sorted(results, key=lambda x: x["dist"])
 
 
-class OrderedProduct(models.Model):
+class OrderItem(models.Model):
     order = models.ForeignKey(
-        Order, on_delete=models.CASCADE, verbose_name="Заказ"
+        Order,
+        on_delete=models.CASCADE,
+        verbose_name="Заказ",
+        related_name="items",
     )
     product = models.ForeignKey(
         Product,
         on_delete=models.DO_NOTHING,
-        related_name="order_position",
         verbose_name="Товар",
+        related_name="order_items",
     )
     quantity = models.IntegerField(
         validators=[MinValueValidator(1)], verbose_name="Количество"
