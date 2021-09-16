@@ -3,10 +3,9 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone
-from geopy import distance
 from phonenumber_field.modelfields import PhoneNumberField
-
-from geocache.models import PlaceCache
+from .utils import get_distance, get_place
+from geocache.models import Place
 
 
 class Restaurant(models.Model):
@@ -163,55 +162,47 @@ class Order(models.Model):
             return 0
         return result["price__sum"]
 
-    def get_restaurants(self):
-        order_coords = self.get_coords(self.address)
-
-        prods = [x.product for x in self.orderedproduct_set.all()]
-
-        items_lists = [
-            RestaurantMenuItem.objects.filter(product=x) for x in prods
-        ]
-        names = []
-
-        for item_list in items_lists:
-            names.append([x.restaurant.name for x in item_list])
-
-        intersection = set(names[0]).intersection(*names[1:])
-        rests = Restaurant.objects.filter(name__in=intersection)
-
+    def available_in(self):        
+        products = [ordered_position.product for ordered_position in self.orderedproduct_set.all()]
+        restaurants_list = []
+        
+        for product in products:
+            restaurants_list.append({item.restaurant for item in product.menu_items.all()})
+        
+        intersection = restaurants_list[0].intersection(*restaurants_list[1:])        
+        
         results = []
-        for i in rests:
-            place = PlaceCache.objects.filter(address=self.address)
-            if len(place) != 0:
-                distance = place[0].distance
+        for restaurant in intersection:
+            print("start")
+            order_place_qs = Place.objects.filter(address=self.address)
+            restaurant_place_qs = Place.objects.filter(address=restaurant.address)
+            
+            print(order_place_qs)
+            if len(order_place_qs):
+                print("order true")
+                order_place = order_place_qs[0]
             else:
-                coords = self.get_coords(i.address)
-                distance = self.get_distance(order_coords, coords)
-                PlaceCache.objects.create(
-                    address=self.address, distance=distance
-                )
-            results.append({"name": i.name, "dist": round(distance, 2)})
+                print("order false")
+                order_place = get_place(self.address)
+
+            print(restaurant_place_qs)
+            if len(restaurant_place_qs):
+                print("rest true")
+                restaurant_place = restaurant_place_qs[0]
+            else:
+                print("rest false")
+                restaurant_place = get_place(restaurant.address)
+            
+            
+            distance = get_distance(order_place, restaurant_place)
+            print(distance)
+
+            results.append({"name": restaurant.name, "dist": distance})
 
         return sorted(results, key=lambda x: x["dist"])
 
-    def get_coords(self, address):
-        try:
-            params = {"q": address, "polygon_geojson": 1, "format": "jsonv2"}
 
-            res = requests.get(
-                f"https://nominatim.geocoding.ai/search.php", params=params
-            )
-            if res.ok:
-                json_data = res.json()
-                return float(json_data[0]["lat"]), float(json_data[0]["lon"])
-        except:
-            return None
 
-    def get_distance(self, coord1, coord2):
-        try:
-            return distance.distance(coord1, coord2).km
-        except:
-            return None
 
 
 class OrderedProduct(models.Model):
@@ -225,15 +216,13 @@ class OrderedProduct(models.Model):
         "Цена товара",
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
-        default=0,
+        validators=[MinValueValidator(0)],        
     )
     total_price = models.DecimalField(
         "Общая цена",
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
-        default=0,
+        validators=[MinValueValidator(0)],        
     )
 
     class Meta:
