@@ -13,7 +13,10 @@ def get_coords(address):
     result.raise_for_status()
 
     data = result.json()
-    return float(data[0]["lat"]), float(data[0]["lon"])
+    if data:
+        return float(data[0]["lat"]), float(data[0]["lon"])
+    else:
+        return None
 
 
 def get_distance(order_place, restaurant_place):
