@@ -20,7 +20,7 @@ def get_distance(order_place, restaurant_place):
             [order_place.lat, order_place.lon],
             [restaurant_place.lat, restaurant_place.lon],
         ).km
-    return result if result else "Неизвестно"
+    return round(result, 2) if result else "... "
 
 
 
