@@ -4,8 +4,10 @@ from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
-from .utils import get_distance, get_place
+
 from geocache.models import Place
+
+from .utils import get_distance, get_place
 
 
 class Restaurant(models.Model):
@@ -122,25 +124,29 @@ class OrderQuerySet(models.QuerySet):
 class Order(models.Model):
     objects = OrderQuerySet.as_manager()
 
-    STATUS_CHOICES = [
-        ("Handled", "Обработано"),
-        ("Unhandled", "Необработано")
-    ]
-    PAYMENT_CHOICES = [
-        ("CASH", "Наличными"),
-        ("CARD", "Электронно")
-    ]
+    STATUS_CHOICES = [("Handled", "Обработано"), ("Unhandled", "Необработано")]
+    PAYMENT_CHOICES = [("CASH", "Наличными"), ("CARD", "Электронно")]
 
     firstname = models.CharField("Имя", max_length=30)
-    lastname = models.CharField("Фамилия",max_length=50)
+    lastname = models.CharField("Фамилия", max_length=50)
     phonenumber = PhoneNumberField("Номер телефона", max_length=32)
     address = models.CharField("Адрес доставки", max_length=100)
-    is_processed = models.CharField("Статус заказа", choices=STATUS_CHOICES, default="Unhandled", max_length=30)
-    payment = models.CharField("Вид оплаты", choices=PAYMENT_CHOICES , default="CASH", max_length=30)
+    is_processed = models.CharField(
+        "Статус заказа",
+        choices=STATUS_CHOICES,
+        default="Unhandled",
+        max_length=30,
+    )
+    payment = models.CharField(
+        "Вид оплаты", choices=PAYMENT_CHOICES, default="CASH", max_length=30
+    )
     comment = models.TextField("Комментарий к заказу", default="", blank=True)
     restaurant = models.ForeignKey(
-        Restaurant, null=True, blank=True, on_delete=models.SET_NULL,
-        verbose_name="Ресторан отгрузки"
+        Restaurant,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="Ресторан отгрузки",
     )
 
     created_at = models.DateTimeField("Дата создания", default=timezone.now)
@@ -162,23 +168,35 @@ class Order(models.Model):
             return 0
         return result["price__sum"]
 
-    def available_in(self):        
-        products = [ordered_position.product for ordered_position in self.orderedproduct_set.select_related('product').all()]
+    def available_in(self):
+        products = [
+            ordered_position.product
+            for ordered_position in self.orderedproduct_set.select_related(
+                "product"
+            ).all()
+        ]
         restaurants_list = []
-        
+
         for product in products:
             restaurants_list.append(
-                {item.restaurant for item in product.menu_items.select_related('restaurant').all()}
+                {
+                    item.restaurant
+                    for item in product.menu_items.select_related(
+                        "restaurant"
+                    ).all()
+                }
             )
-        
-        intersection = restaurants_list[0].intersection(*restaurants_list[1:])        
-        
+
+        intersection = restaurants_list[0].intersection(*restaurants_list[1:])
+
         results = []
         for restaurant in intersection:
             print("start")
             order_place_qs = Place.objects.filter(address=self.address)
-            restaurant_place_qs = Place.objects.filter(address=restaurant.address)
-            
+            restaurant_place_qs = Place.objects.filter(
+                address=restaurant.address
+            )
+
             print(order_place_qs)
             if len(order_place_qs):
                 print("order true")
@@ -194,8 +212,7 @@ class Order(models.Model):
             else:
                 print("rest false")
                 restaurant_place = get_place(restaurant.address)
-            
-            
+
             distance = get_distance(order_place, restaurant_place)
             print(distance)
 
@@ -204,27 +221,30 @@ class Order(models.Model):
         return sorted(results, key=lambda x: x["dist"])
 
 
-
-
-
 class OrderedProduct(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name="Заказ")
-    product = models.ForeignKey(
-        Product, on_delete=models.DO_NOTHING, related_name="order_position",
-        verbose_name="Товар"
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, verbose_name="Заказ"
     )
-    quantity = models.IntegerField(validators=[MinValueValidator(1)], verbose_name="Количество")
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.DO_NOTHING,
+        related_name="order_position",
+        verbose_name="Товар",
+    )
+    quantity = models.IntegerField(
+        validators=[MinValueValidator(1)], verbose_name="Количество"
+    )
     product_price = models.DecimalField(
         "Цена товара",
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)],        
+        validators=[MinValueValidator(0)],
     )
     total_price = models.DecimalField(
         "Общая цена",
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)],        
+        validators=[MinValueValidator(0)],
     )
 
     class Meta:
