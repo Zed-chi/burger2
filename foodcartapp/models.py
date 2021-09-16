@@ -139,7 +139,7 @@ class Order(models.Model):
     payment = models.CharField(
         "Вид оплаты", choices=PAYMENT_CHOICES, default="CARD", max_length=30
     )
-    comment = models.TextField("Комментарий к заказу", null=True, blank=True)
+    comment = models.TextField("Комментарий к заказу", blank=True, default="")
     restaurant = models.ForeignKey(
         Restaurant,
         null=True,
@@ -162,15 +162,12 @@ class Order(models.Model):
     def get_price(self):
         result = self.items.annotate(
             price=F("product__price") * F("quantity")
-        ).aggregate(Sum("price"))
-        if result["price__sum"] is None:
-            return 0
+        ).aggregate(Sum("price"))        
         return result["price__sum"]
 
     def available_in(self):
         products = [
-            order_item.product
-            for order_item in self.items.select_related("product").all()
+            order_item.product for order_item in self.items.select_related("product").all()
         ]
         restaurants_list = []
 
@@ -183,7 +180,7 @@ class Order(models.Model):
                     ).all()
                 }
             )
-
+        
         intersection = restaurants_list[0].intersection(*restaurants_list[1:])
 
         results = []
@@ -230,13 +227,13 @@ class OrderItem(models.Model):
         "Цена товара",
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(0.1)],
     )
     total_price = models.DecimalField(
         "Общая цена",
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(0.1)],
     )
 
     class Meta:
