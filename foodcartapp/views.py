@@ -1,17 +1,8 @@
-import json
-
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
-from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.serializers import (CharField, IntegerField, ListField,
-                                        ModelSerializer, Serializer,
-                                        ValidationError)
+from rest_framework.serializers import (IntegerField, ModelSerializer)
 
 from .models import Order, OrderItem, Product
 
@@ -83,21 +74,24 @@ def register_order(request):
             phonenumber=data["phonenumber"],
             address=data["address"],
         )
-        
+
         OrderItem.objects.bulk_create(
-            [OrderItem(
-                order=order,
-                product=product_data["product"],
-                quantity=product_data["quantity"],
-                product_price=product_data["product"].price,
-                total_price=product_data["product"].price
-                * product_data["quantity"],
-            ) for product_data in data["products"]]
+            [
+                OrderItem(
+                    order=order,
+                    product=product_data["product"],
+                    quantity=product_data["quantity"],
+                    product_price=product_data["product"].price,
+                    total_price=product_data["product"].price
+                    * product_data["quantity"],
+                )
+                for product_data in data["products"]
+            ],
         )
 
-        ser = OrderSerializer(order)
+        serializer = OrderSerializer(order)
 
-        return Response(ser.data)
+        return Response(serializer.data)
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -112,7 +106,7 @@ class OrderItemSerializer(ModelSerializer):
 class OrderSerializer(ModelSerializer):
     id = IntegerField(read_only=True)
     products = OrderItemSerializer(
-        many=True, allow_empty=False, write_only=True
+        many=True, allow_empty=False, write_only=True,
     )
 
     class Meta:

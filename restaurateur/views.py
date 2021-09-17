@@ -1,5 +1,3 @@
-import geopy
-import requests
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
@@ -20,7 +18,7 @@ class Login(forms.Form):
             attrs={
                 "class": "form-control",
                 "placeholder": "Укажите имя пользователя",
-            }
+            },
         ),
     )
     password = forms.CharField(
@@ -28,7 +26,7 @@ class Login(forms.Form):
         max_length=75,
         required=True,
         widget=forms.PasswordInput(
-            attrs={"class": "form-control", "placeholder": "Введите пароль"}
+            attrs={"class": "form-control", "placeholder": "Введите пароль"},
         ),
     )
 

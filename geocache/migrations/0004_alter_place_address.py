@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('geocache', '0003_auto_20210916_2322'),
+        ("geocache", "0003_auto_20210916_2322"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='place',
-            name='address',
-            field=models.CharField(db_index=True, max_length=100, verbose_name='Адрес'),
+            model_name="place",
+            name="address",
+            field=models.CharField(
+                db_index=True, max_length=100, verbose_name="Адрес"
+            ),
         ),
     ]

@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
-
 from geocache.models import Place
 
 from .utils import get_distance, get_place
@@ -33,7 +32,7 @@ class Restaurant(models.Model):
 class ProductQuerySet(models.QuerySet):
     def available(self):
         products = RestaurantMenuItem.objects.filter(
-            availability=True
+            availability=True,
         ).values_list("product")
         return self.filter(pk__in=products)
 
@@ -101,7 +100,7 @@ class RestaurantMenuItem(models.Model):
         verbose_name="продукт",
     )
     availability = models.BooleanField(
-        "в продаже", default=True, db_index=True
+        "в продаже", default=True, db_index=True,
     )
 
     class Meta:
@@ -116,7 +115,7 @@ class RestaurantMenuItem(models.Model):
 class OrderQuerySet(models.QuerySet):
     def get_price(self):
         return self.items.annotate(
-            price=F("product__id") * F("quantity")
+            price=F("product__id") * F("quantity"),
         ).aggegate(Sum("price"))
 
 
@@ -137,7 +136,7 @@ class Order(models.Model):
         max_length=30,
     )
     payment = models.CharField(
-        "Вид оплаты", choices=PAYMENT_CHOICES, default="CARD", max_length=30
+        "Вид оплаты", choices=PAYMENT_CHOICES, default="CARD", max_length=30,
     )
     comment = models.TextField("Комментарий к заказу", blank=True, default="")
     restaurant = models.ForeignKey(
@@ -161,13 +160,14 @@ class Order(models.Model):
 
     def get_price(self):
         result = self.items.annotate(
-            price=F("product__price") * F("quantity")
-        ).aggregate(Sum("price"))        
+            price=F("product__price") * F("quantity"),
+        ).aggregate(Sum("price"))
         return result["price__sum"]
 
     def available_in(self):
         products = [
-            order_item.product for order_item in self.items.select_related("product").all()
+            order_item.product
+            for order_item in self.items.select_related("product").all()
         ]
         restaurants_list = []
 
@@ -176,18 +176,18 @@ class Order(models.Model):
                 {
                     item.restaurant
                     for item in product.menu_items.select_related(
-                        "restaurant"
+                        "restaurant",
                     ).all()
-                }
+                },
             )
-        
+
         intersection = restaurants_list[0].intersection(*restaurants_list[1:])
 
         results = []
         for restaurant in intersection:
             order_place_qs = Place.objects.filter(address=self.address)
             restaurant_place_qs = Place.objects.filter(
-                address=restaurant.address
+                address=restaurant.address,
             )
 
             if len(order_place_qs):
@@ -221,7 +221,7 @@ class OrderItem(models.Model):
         related_name="order_items",
     )
     quantity = models.IntegerField(
-        validators=[MinValueValidator(1)], verbose_name="Количество"
+        validators=[MinValueValidator(1)], verbose_name="Количество",
     )
     product_price = models.DecimalField(
         "Цена товара",

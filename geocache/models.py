@@ -8,7 +8,8 @@ class Place(models.Model):
     lat = models.FloatField("Широта")
     lon = models.FloatField("Долгота")
     last_update = models.DateTimeField(
-        "Дата последнего обновления", default=timezone.now
+        "Дата последнего обновления",
+        default=timezone.now,
     )
 
     def __str__(self) -> str:

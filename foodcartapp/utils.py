@@ -1,6 +1,5 @@
 import requests
 from geopy import distance
-
 from geocache.models import Place
 
 
@@ -8,7 +7,8 @@ def get_coords(address):
     params = {"q": address, "polygon_geojson": 1, "format": "jsonv2"}
 
     result = requests.get(
-        f"https://nominatim.geocoding.ai/search.php", params=params
+        "https://nominatim.geocoding.ai/search.php",
+        params=params,
     )
     result.raise_for_status()
 
