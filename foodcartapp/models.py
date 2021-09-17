@@ -112,18 +112,15 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
-class OrderQuerySet(models.QuerySet):
-    def get_price(self):
-        return self.items.annotate(
-            price=F("product__id") * F("quantity"),
-        ).aggegate(Sum("price"))
-
-
 class Order(models.Model):
-    objects = OrderQuerySet.as_manager()
-
-    STATUS_CHOICES = [("Handled", "Обработано"), ("Unhandled", "Необработано")]
-    PAYMENT_CHOICES = [("CASH", "Наличными"), ("CARD", "Электронно")]
+    STATUS_CHOICES = [
+        ("Handled", "Обработано"),
+        ("Unhandled", "Необработано")
+    ]
+    PAYMENT_CHOICES = [
+        ("CASH", "Наличными"),
+        ("CARD", "Электронно")
+    ]
 
     firstname = models.CharField("Имя", max_length=30)
     lastname = models.CharField("Фамилия", max_length=50)
