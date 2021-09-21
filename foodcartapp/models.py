@@ -112,7 +112,15 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
+class OrderQuerySet(models.QuerySet):
+    def get_price(self):
+        result = self.items.annotate(
+            price=F("product__price") * F("quantity"),
+        ).aggregate(Sum("price"))
+        return result["price__sum"]
+
 class Order(models.Model):
+    objects = OrderQuerySet.as_manager()
     STATUS_CHOICES = [
         ("Handled", "Обработано"),
         ("Unhandled", "Необработано")
@@ -155,11 +163,13 @@ class Order(models.Model):
     def __str__(self):
         return f"Order - {self.phonenumber}"
 
+    """
     def get_price(self):
         result = self.items.annotate(
             price=F("product__price") * F("quantity"),
         ).aggregate(Sum("price"))
         return result["price__sum"]
+    """
 
     def available_in(self):
         products = [
