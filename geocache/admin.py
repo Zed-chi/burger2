@@ -6,4 +6,4 @@ from .models import Place
 # Register your models here.
 @admin.register(Place)
 class PlaceAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("address", "lat", "lon")
