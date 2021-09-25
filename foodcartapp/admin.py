@@ -119,18 +119,21 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [
         OrderItemInline,
     ]
-    list_display = ("firstname", "lastname", "phonenumber", "address")
+    list_display = (
+        "firstname", "lastname", "phonenumber", "address"
+    )
 
     def response_post_save_change(self, request, obj):
         res = super().response_post_save_change(request, obj)
-        if "next" in request.GET and url_has_allowed_host_and_scheme(
-            request.GET["next"],
+                
+        is_redirect_allowed = url_has_allowed_host_and_scheme(
+            request.GET.get("next", None),
             allowed_hosts=None,
-        ):
-
-            return HttpResponseRedirect(request.GET["next"])
-        else:
-            return res
+        )
+        
+        if is_redirect_allowed:                        
+            return HttpResponseRedirect(request.GET["next"])        
+        return res
 
 
 @admin.register(OrderItem)
