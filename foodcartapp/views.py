@@ -2,7 +2,7 @@ from django.db import transaction
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.serializers import (IntegerField, ModelSerializer)
+from rest_framework.serializers import IntegerField, ModelSerializer
 
 from .models import Order, OrderItem, Product
 
@@ -106,7 +106,9 @@ class OrderItemSerializer(ModelSerializer):
 class OrderSerializer(ModelSerializer):
     id = IntegerField(read_only=True)
     products = OrderItemSerializer(
-        many=True, allow_empty=False, write_only=True,
+        many=True,
+        allow_empty=False,
+        write_only=True,
     )
 
     class Meta:
