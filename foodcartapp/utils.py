@@ -1,5 +1,6 @@
 import requests
 from geopy import distance
+
 from geocache.models import Place
 
 
