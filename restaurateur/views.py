@@ -113,9 +113,35 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url="restaurateur:login")
 def view_orders(request):
-    orders = Order.objects.filter(is_processed="Unhandled")
+    orders = list(
+        Order.objects.prefetch_related("items")
+        .prefetch_related("items__product")
+        .prefetch_related("items__product__menu_items")
+        .prefetch_related("items__product__menu_items__restaurant")
+        .filter(is_processed="Unhandled")
+        .with_price()
+        .with_available_restaurants()
+    )
+
     return render(
         request,
         template_name="order_items.html",
-        context={"order_items": orders, "backURL": request.path},
+        context={
+            "order_items": [serialize_order(order) for order in orders],
+            "backURL": request.path,
+        },
     )
+
+
+def serialize_order(order):
+    return {
+        "id": order.id,
+        "status": order.get_is_processed_display(),
+        "total_price": order.price,
+        "firstname": order.firstname,
+        "phonenumber": order.phonenumber,
+        "address": order.address,
+        "comment": order.comment,
+        "payment_method": order.get_payment_display(),
+        "available_in": order.available_in,
+    }
