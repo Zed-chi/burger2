@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
+
 from geocache.models import Place
 
 from .utils import get_distance, get_place
@@ -100,7 +101,9 @@ class RestaurantMenuItem(models.Model):
         verbose_name="продукт",
     )
     availability = models.BooleanField(
-        "в продаже", default=True, db_index=True,
+        "в продаже",
+        default=True,
+        db_index=True,
     )
 
     class Meta:
@@ -113,21 +116,79 @@ class RestaurantMenuItem(models.Model):
 
 
 class OrderQuerySet(models.QuerySet):
-    def get_price(self):
-        result = self.items.annotate(
-            price=F("product__price") * F("quantity"),
-        ).aggregate(Sum("price"))
-        return result["price__sum"]
+    def with_price(self):
+        return self.annotate(price=Sum("items__total_price"))
+
+    def with_available_restaurants(self):
+        places = list(Place.objects.all())
+
+        for order in self:
+            products = [item.product for item in order.items.all()]
+            restaurants_list = []
+            for product in products:
+                restaurants_list.append(
+                    {
+                        item.restaurant
+                        for item in product.menu_items.all()
+                    },
+                )
+            intersection = restaurants_list[0].intersection(
+                *restaurants_list[1:]
+            )
+            results = []
+
+            for restaurant in intersection:
+
+                order_place_qs = list(
+                    filter(
+                        lambda x: x.address == order.address, places
+                    )
+                )
+
+                restaurant_place_qs = list(
+                    filter(
+                        lambda x: x.address == restaurant.address,
+                        places,
+                    )
+                )
+
+                if order_place_qs:
+
+                    order_place = order_place_qs[0]
+                else:
+
+                    order_place = get_place(order.address)
+
+                if restaurant_place_qs:
+
+                    restaurant_place = restaurant_place_qs[0]
+                else:
+
+                    restaurant_place = get_place(restaurant.address)
+
+                distance = get_distance(
+                    order_place, restaurant_place
+                )
+
+                results.append(
+                    {"name": restaurant.name, "dist": distance}
+                )
+
+            order.available_in = sorted(
+                results, key=lambda x: x["dist"]
+            )
+        return self
+
 
 class Order(models.Model):
     objects = OrderQuerySet.as_manager()
     STATUS_CHOICES = [
         ("Handled", "Обработано"),
-        ("Unhandled", "Необработано")
+        ("Unhandled", "Необработано"),
     ]
     PAYMENT_CHOICES = [
         ("CASH", "Наличными"),
-        ("CARD", "Электронно")
+        ("CARD", "Электронно"),
     ]
 
     firstname = models.CharField("Имя", max_length=30)
@@ -141,9 +202,14 @@ class Order(models.Model):
         max_length=30,
     )
     payment = models.CharField(
-        "Вид оплаты", choices=PAYMENT_CHOICES, default="CARD", max_length=30,
+        "Вид оплаты",
+        choices=PAYMENT_CHOICES,
+        default="CARD",
+        max_length=30,
     )
-    comment = models.TextField("Комментарий к заказу", blank=True, default="")
+    comment = models.TextField(
+        "Комментарий к заказу", blank=True, default=""
+    )
     restaurant = models.ForeignKey(
         Restaurant,
         null=True,
@@ -152,9 +218,15 @@ class Order(models.Model):
         verbose_name="Ресторан отгрузки",
     )
 
-    created_at = models.DateTimeField("Дата создания", default=timezone.now)
-    called_at = models.DateTimeField("Дата звонка", null=True, blank=True)
-    delivered_at = models.DateTimeField("Дата доставки", null=True, blank=True)
+    created_at = models.DateTimeField(
+        "Дата создания", default=timezone.now
+    )
+    called_at = models.DateTimeField(
+        "Дата звонка", null=True, blank=True
+    )
+    delivered_at = models.DateTimeField(
+        "Дата доставки", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "заказ"
@@ -163,58 +235,9 @@ class Order(models.Model):
     def __str__(self):
         return f"Order - {self.phonenumber}"
 
-    """
-    def get_price(self):
-        result = self.items.annotate(
-            price=F("product__price") * F("quantity"),
-        ).aggregate(Sum("price"))
-        return result["price__sum"]
-    """
-
-    def available_in(self):
-        products = [
-            order_item.product
-            for order_item in self.items.select_related("product").all()
-        ]
-        restaurants_list = []
-
-        for product in products:
-            restaurants_list.append(
-                {
-                    item.restaurant
-                    for item in product.menu_items.select_related(
-                        "restaurant",
-                    ).all()
-                },
-            )
-
-        intersection = restaurants_list[0].intersection(*restaurants_list[1:])
-
-        results = []
-        for restaurant in intersection:
-            order_place_qs = Place.objects.filter(address=self.address)
-            restaurant_place_qs = Place.objects.filter(
-                address=restaurant.address,
-            )
-
-            if len(order_place_qs):
-                order_place = order_place_qs[0]
-            else:
-                order_place = get_place(self.address)
-
-            if len(restaurant_place_qs):
-                restaurant_place = restaurant_place_qs[0]
-            else:
-                restaurant_place = get_place(restaurant.address)
-
-            distance = get_distance(order_place, restaurant_place)
-
-            results.append({"name": restaurant.name, "dist": distance})
-
-        return sorted(results, key=lambda x: x["dist"])
-
 
 class OrderItem(models.Model):
+
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
@@ -228,7 +251,8 @@ class OrderItem(models.Model):
         related_name="order_items",
     )
     quantity = models.IntegerField(
-        validators=[MinValueValidator(1)], verbose_name="Количество",
+        validators=[MinValueValidator(1)],
+        verbose_name="Количество",
     )
     product_price = models.DecimalField(
         "Цена товара",
@@ -248,4 +272,4 @@ class OrderItem(models.Model):
         verbose_name_plural = "позиции"
 
     def __str__(self):
-        return f"OrderPosition {self.id}"
+        return f"OrderItem {self.id}"
