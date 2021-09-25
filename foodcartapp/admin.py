@@ -86,7 +86,8 @@ class ProductAdmin(admin.ModelAdmin):
         if not obj.image:
             return "выберите картинку"
         return format_html(
-            '<img src="{url}" style="max-height: 200px;"/>', url=obj.image.url,
+            '<img src="{url}" style="max-height: 200px;"/>',
+            url=obj.image.url,
         )
 
     get_image_preview.short_description = "превью"
@@ -123,7 +124,8 @@ class OrderAdmin(admin.ModelAdmin):
     def response_post_save_change(self, request, obj):
         res = super().response_post_save_change(request, obj)
         if "next" in request.GET and url_has_allowed_host_and_scheme(
-            request.GET["next"], allowed_hosts=None,
+            request.GET["next"],
+            allowed_hosts=None,
         ):
 
             return HttpResponseRedirect(request.GET["next"])
