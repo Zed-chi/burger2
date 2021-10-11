@@ -39,6 +39,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareExcluding404',
 ]
 
 ROOT_URLCONF = "star_burger.urls"
@@ -121,3 +122,12 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "assets"),
     os.path.join(BASE_DIR, "bundles"),
 ]
+
+
+ROLLBAR = {
+    'access_token': env.str("rollbar_token"),
+    'environment': env.str("rollbar_env", "Test"),
+    'root': BASE_DIR,
+}
+import rollbar
+rollbar.init(**ROLLBAR)
