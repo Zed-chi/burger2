@@ -145,7 +145,9 @@ parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
 - `rollbar_token` - ключ для rollbar сервиса
 - `rollbar_env` - название окружения для удобства просмотра в rollbar
- 
+- `psql_login` - логин юзера базы данных
+- `psql_pass` - пароль юзера базы данных
+- `psql_db` - навание базы данных 
 
 ## Цели проекта
 
