@@ -83,9 +83,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default="sqlite:////{0}".format(os.path.join(BASE_DIR, "db.sqlite3"))
-    )
+    "default": {
+        "ENGINE":"django.db.backends.postgresql",
+        "NAME":env.str("psql_db"),
+        "USER":env.str("psql_login"),
+        "PASSWORD":env.str("psql_pass"),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
