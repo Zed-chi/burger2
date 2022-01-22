@@ -149,6 +149,15 @@ parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 - `psql_pass` - пароль юзера базы данных
 - `psql_db` - навание базы данных 
 
+
+
+Если проблема с parcel то можно установить esbuild:
+    `npm install -g esbuild`
+
+И собрать командой:
+    `esbuild ./bundles-src/index.js --bundle --loader:.png=file --loader:.js=jsx --outdir=bundles`
+
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
