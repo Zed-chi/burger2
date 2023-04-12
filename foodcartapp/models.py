@@ -127,22 +127,14 @@ class OrderQuerySet(models.QuerySet):
             restaurants_list = []
             for product in products:
                 restaurants_list.append(
-                    {
-                        item.restaurant
-                        for item in product.menu_items.all()
-                    },
+                    {item.restaurant for item in product.menu_items.all()},
                 )
-            intersection = restaurants_list[0].intersection(
-                *restaurants_list[1:]
-            )
+            intersection = restaurants_list[0].intersection(*restaurants_list[1:])
             results = []
 
             for restaurant in intersection:
-
                 order_place_qs = list(
-                    filter(
-                        lambda x: x.address == order.address, places
-                    )
+                    filter(lambda x: x.address == order.address, places)
                 )
 
                 restaurant_place_qs = list(
@@ -153,30 +145,20 @@ class OrderQuerySet(models.QuerySet):
                 )
 
                 if order_place_qs:
-
                     order_place = order_place_qs[0]
                 else:
-
                     order_place = get_place(order.address)
 
                 if restaurant_place_qs:
-
                     restaurant_place = restaurant_place_qs[0]
                 else:
-
                     restaurant_place = get_place(restaurant.address)
 
-                distance = get_distance(
-                    order_place, restaurant_place
-                )
+                distance = get_distance(order_place, restaurant_place)
 
-                results.append(
-                    {"name": restaurant.name, "dist": distance}
-                )
+                results.append({"name": restaurant.name, "dist": distance})
 
-            order.available_in = sorted(
-                results, key=lambda x: x["dist"]
-            )
+            order.available_in = sorted(results, key=lambda x: x["dist"])
         return self
 
 
@@ -207,9 +189,7 @@ class Order(models.Model):
         default="CARD",
         max_length=30,
     )
-    comment = models.TextField(
-        "Комментарий к заказу", blank=True, default=""
-    )
+    comment = models.TextField("Комментарий к заказу", blank=True, default="")
     restaurant = models.ForeignKey(
         Restaurant,
         null=True,
@@ -218,15 +198,9 @@ class Order(models.Model):
         verbose_name="Ресторан отгрузки",
     )
 
-    created_at = models.DateTimeField(
-        "Дата создания", default=timezone.now
-    )
-    called_at = models.DateTimeField(
-        "Дата звонка", null=True, blank=True
-    )
-    delivered_at = models.DateTimeField(
-        "Дата доставки", null=True, blank=True
-    )
+    created_at = models.DateTimeField("Дата создания", default=timezone.now)
+    called_at = models.DateTimeField("Дата звонка", null=True, blank=True)
+    delivered_at = models.DateTimeField("Дата доставки", null=True, blank=True)
 
     class Meta:
         verbose_name = "заказ"
@@ -237,7 +211,6 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,

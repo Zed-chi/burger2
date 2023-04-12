@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("foodcartapp", "0037_auto_20210125_1833"),
     ]
@@ -55,9 +54,7 @@ class Migration(migrations.Migration):
                 (
                     "quantity",
                     models.IntegerField(
-                        validators=[
-                            django.core.validators.MinValueValidator(1)
-                        ]
+                        validators=[django.core.validators.MinValueValidator(1)]
                     ),
                 ),
                 (

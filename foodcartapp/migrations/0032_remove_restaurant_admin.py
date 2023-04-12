@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("foodcartapp", "0031_auto_20200703_0612"),
     ]

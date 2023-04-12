@@ -1,6 +1,7 @@
 import os
 
 import dj_database_url
+import rollbar
 from environs import Env
 
 env = Env()
@@ -39,7 +40,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareExcluding404',
+    "rollbar.contrib.django.middleware.RollbarNotifierMiddlewareExcluding404",
 ]
 
 ROOT_URLCONF = "star_burger.urls"
@@ -84,10 +85,10 @@ MEDIA_URL = "/media/"
 
 DATABASES = {
     "default": {
-        "ENGINE":"django.db.backends.postgresql",
-        "NAME":env.str("psql_db"),
-        "USER":env.str("psql_login"),
-        "PASSWORD":env.str("psql_pass"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.str("psql_db"),
+        "USER": env.str("psql_login"),
+        "PASSWORD": env.str("psql_pass"),
     }
 }
 
@@ -128,9 +129,8 @@ STATICFILES_DIRS = [
 
 
 ROLLBAR = {
-    'access_token': env.str("rollbar_token"),
-    'environment': env.str("rollbar_env", "Test"),
-    'root': BASE_DIR,
+    "access_token": env.str("rollbar_token"),
+    "environment": env.str("rollbar_env", "Test"),
+    "root": BASE_DIR,
 }
-import rollbar
 rollbar.init(**ROLLBAR)

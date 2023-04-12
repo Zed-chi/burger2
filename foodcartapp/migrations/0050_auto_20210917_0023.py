@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("foodcartapp", "0049_auto_20210915_2256"),
     ]
@@ -27,9 +26,7 @@ class Migration(migrations.Migration):
                 (
                     "quantity",
                     models.IntegerField(
-                        validators=[
-                            django.core.validators.MinValueValidator(1)
-                        ],
+                        validators=[django.core.validators.MinValueValidator(1)],
                         verbose_name="Количество",
                     ),
                 ),
@@ -38,9 +35,7 @@ class Migration(migrations.Migration):
                     models.DecimalField(
                         decimal_places=2,
                         max_digits=8,
-                        validators=[
-                            django.core.validators.MinValueValidator(0)
-                        ],
+                        validators=[django.core.validators.MinValueValidator(0)],
                         verbose_name="Цена товара",
                     ),
                 ),
@@ -49,9 +44,7 @@ class Migration(migrations.Migration):
                     models.DecimalField(
                         decimal_places=2,
                         max_digits=8,
-                        validators=[
-                            django.core.validators.MinValueValidator(0)
-                        ],
+                        validators=[django.core.validators.MinValueValidator(0)],
                         verbose_name="Общая цена",
                     ),
                 ),

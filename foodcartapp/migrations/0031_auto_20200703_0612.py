@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("foodcartapp", "0030_auto_20200629_1341"),
     ]
@@ -13,9 +12,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="restaurant",
             name="address",
-            field=models.CharField(
-                blank=True, max_length=100, verbose_name="адрес"
-            ),
+            field=models.CharField(blank=True, max_length=100, verbose_name="адрес"),
         ),
         migrations.AddField(
             model_name="restaurant",

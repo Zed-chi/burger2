@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("foodcartapp", "0018_remove_restaurant_admin"),
     ]
