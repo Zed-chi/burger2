@@ -2,11 +2,14 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from environs import Env
+
+env = Env()
+env.read_env()
 
 
 def main():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "star_burger.settings")
-    os.environ.setdefault("DJANGO_CONFIGURATION", "Dev")
     try:
         # from django.core.management import execute_from_command_line
         from configurations.management import execute_from_command_line
