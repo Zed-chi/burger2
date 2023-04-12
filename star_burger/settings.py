@@ -1,16 +1,20 @@
 import os
-import rollbar
-from environs import Env
-from configurations import Configuration
 from pathlib import Path
+
+import rollbar
+from configurations import Configuration
+from environs import Env
 
 env = Env()
 env.read_env()
-BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Dev(Configuration):
-    SECRET_KEY = env("SECRET_KEY", "etirgvonenrfnoerngorenogneongg334g")
+    SECRET_KEY = env("SECRET_KEY")
     DEBUG = True
 
     ALLOWED_HOSTS = ["*"]
@@ -63,7 +67,7 @@ class Dev(Configuration):
         {
             "BACKEND": "django.template.backends.django.DjangoTemplates",
             "DIRS": [
-                os.path.join(BASE_DIR, "templates"),
+                BASE_DIR / "templates",
             ],
             "APP_DIRS": True,
             "OPTIONS": {
@@ -79,15 +83,13 @@ class Dev(Configuration):
 
     WSGI_APPLICATION = "star_burger.wsgi.application"
 
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-    MEDIA_URL = "/media/"
-
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+    DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
     AUTH_PASSWORD_VALIDATORS = [
         {
@@ -115,7 +117,9 @@ class Dev(Configuration):
     USE_TZ = True
 
     STATIC_URL = "/static/"
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+    MEDIA_ROOT = BASE_DIR / "media"
+    MEDIA_URL = "/media/"
     INTERNAL_IPS = ["127.0.0.1"]
 
     STATICFILES_DIRS = [
@@ -128,7 +132,7 @@ class Prod(Dev):
     DEBUG = False
     ALLOWED_HOSTS = ["localhost"]
     ROLLBAR = {
-        "access_token": env.str("rollbar_token"),
+        "access_token": env.str("rollbar_token", None),
         "environment": env.str("rollbar_env", "Test"),
         "root": BASE_DIR,
     }
@@ -139,8 +143,8 @@ class ProdPostgres(Prod):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": env.str("psql_db"),
-            "USER": env.str("psql_login"),
-            "PASSWORD": env.str("psql_pass"),
+            "NAME": env.str("PG_DB_NAME", None),
+            "USER": env.str("PG_USER", None),
+            "PASSWORD": env.str("PG_PASS", None),
         }
     }
