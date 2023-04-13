@@ -130,6 +130,7 @@ class Dev(Configuration):
 
 class Prod(Dev):
     DEBUG = False
+    ALLOWED_HOSTS = ["localhost"]
     ROLLBAR = {
         "access_token": env.str("ROLLBAR_TOKEN", None),
         "environment": env.str("ROLLBAR_ENV", "Test"),
