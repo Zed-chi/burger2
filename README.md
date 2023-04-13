@@ -73,6 +73,11 @@
 
 ## Информация по уже развернутому проекту:
 
+#### SSL
+
+Certbot не работает, поэтому был выбран [acme-nginx](https://github.com/kshcherban/acme-nginx#usage), с ним проблем нет.
+Обновление определено в `cert_renewal.service` и `cert_renewal.timer`
+
 В корне проекта находится файлик deploy.sh который:
 
 - Обновит код репозитория
