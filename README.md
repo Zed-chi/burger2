@@ -23,12 +23,12 @@
 * `PG_USER` - пароль юзера базы данных (в случае конфигурации ProdPostgres)
 * `PG_PASS` - навание базы данных (в случае конфигурации ProdPostgres)
 
-Запуск:
+# Запуск:
 
 - pip install -r requirements.txt
 - npm install --dev
 
-Собрать фронтенд parcel-ом:
+### Собрать фронтенд parcel-ом:
 
 - npm install -g parcel@latest # установка
 - parcel build bundles-src/index.js --dist-dir bundles --public-url="./" # сборка
@@ -38,8 +38,37 @@
 - npm install -g esbuild # установка
 - esbuild ./bundles-src/index.js --bundle --loader:.png=file --loader:.js=jsx --outdir=bundles # сборка
 
+###
+
 - python manage.py migrate
 - python manage.py runserver
+
+### Для Работы Postgres
+
+Установить:
+`sudo apt-get update`
+`sudo apt-get install libpq-dev postgresql postgresql-contrib`
+
+#### Создать базу и пользователя:
+
+`sudo su - postgres`
+Войти в оболочку дб
+`>>psql`
+
+```
+    CREATE DATABASE <имя базы>;
+    CREATE USER <имя пользователя> WITH PASSWORD 'пароль';
+    GRANT ALL PRIVILEGES ON DATABASE <имя базы> TO <имя пользователя>;
+    \q
+    exit
+```
+
+Найти файл pg_hba.conf:
+`find / -name pg_hba.conf 2>/dev/null`
+Заменить:
+`host    all     postgres   peer` На `host    all     postgres      md5`
+Перезагрузить:
+`sudo service postgresql reload`
 
 ## Информация по уже развернутому проекту:
 
