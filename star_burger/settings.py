@@ -131,8 +131,8 @@ class Dev(Configuration):
 class Prod(Dev):
     DEBUG = False
     ROLLBAR = {
-        "access_token": env.str("rollbar_token", None),
-        "environment": env.str("rollbar_env", "Test"),
+        "access_token": env.str("ROLLBAR_TOKEN", None),
+        "environment": env.str("ROLLBAR_ENV", "Test"),
         "root": BASE_DIR,
     }
     rollbar.init(**ROLLBAR)
