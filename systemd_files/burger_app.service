@@ -1,0 +1,13 @@
+[Unit]
+Description=burger-shop
+After=postgresql.service
+Requires=postgresql.service
+
+
+[Service]
+ExecStart=gunicorn -w 3 -b unix:/tmp/burger-shop.sock star_burger.wsgi:application
+WorkingDirectory=/opt/burger2
+Restart=always
+Requires=postgresql.service
+
+[Install]

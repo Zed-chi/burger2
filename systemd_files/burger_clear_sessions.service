@@ -1,0 +1,6 @@
+[Unit]
+Description=Clearing django's sessions
+
+
+[Service]
+WorkingDirectory=/opt/burger2/

@@ -1,0 +1,5 @@
+[Unit]
+Description=Cert Renewal
+
+[Service]
+ExecStart=sudo acme-nginx -d zed-chi.fun -d www.zed-chi.fun

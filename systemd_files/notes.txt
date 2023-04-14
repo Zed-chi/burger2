@@ -1,0 +1,7 @@
+systemctl start
+systemctl stop
+systemctl restart
+systemctl daemon-reload
+systemctl status
+
+journalctl -u ...
