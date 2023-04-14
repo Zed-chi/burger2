@@ -38,23 +38,34 @@ MY_HOST=<доменное имя> для ALLOWED_HOSTS
 ### Подготовка к запуску:
 
 Установить требуемые для работы библиотеки:
+
 `pip install -r requirements.txt`
 `npm install --dev`
 
 Собрать фронтенд:
-Вариант с утилитой parcel: - `npm install -g parcel@latest` - `parcel build bundles-src/index.js --dist-dir bundles --public-url="./"`
-Вариант с утилитой esbuild: - `npm install -g esbuild` - `npx esbuild ./bundles-src/index.js --bundle --loader:.png=file --loader:.js=jsx --outdir=bundles`
+Вариант с утилитой parcel:
+- `npm install -g parcel@latest`
+- `parcel build bundles-src/index.js --dist-dir bundles --public-url="./"`
+
+Вариант с утилитой esbuild:
+- `npm install -g esbuild` 
+- `npx esbuild ./bundles-src/index.js --bundle --loader:.png=file --loader:.js=jsx --outdir=bundles`
+
 
 #### Для Работы Postgresql
 
 Установить:
+
 `sudo apt-get update`
+
 `sudo apt-get install libpq-dev postgresql postgresql-contrib`
 
 Создать базу и пользователя:
+
 `sudo su - postgres`
 
 Войти в оболочку дб
+
 `>>psql`
 
 ```
@@ -66,19 +77,27 @@ MY_HOST=<доменное имя> для ALLOWED_HOSTS
 ```
 
 Найти файл pg_hba.conf:
+
 `find / -name pg_hba.conf 2>/dev/null`
+
 Заменить:
+
 `host    all     postgres   peer` На `host    all     postgres      md5`
+
 Перезагрузить:
+
 `sudo service postgresql reload`
 
 ---
 
 Провести миграцию базы данных:
+
 `python manage.py migrate`
 
 Тестовый запуск:
+
 `python manage.py runserver 0.0.0.0:80`
+
 `gunicorn star_burger.wsgi:application -b 0.0.0.0:80`
 
 ---
